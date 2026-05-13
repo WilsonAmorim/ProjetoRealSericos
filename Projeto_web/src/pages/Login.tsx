@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/logo_real.jpg';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -48,7 +49,8 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-brand-light-gray p-4">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-brand-blue">
+          <img src={logo} alt="RealServiços Logo" className="h-24 w-auto mx-auto mb-2" />
+          <h2 className="mt-2 text-3xl font-extrabold text-brand-blue">
             RealServiços
           </h2>
           <p className="mt-2 text-sm text-gray-500">

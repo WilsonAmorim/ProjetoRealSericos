@@ -4,6 +4,7 @@ import { LogOut, LayoutDashboard, User, Users, DollarSign, Settings, Wrench, Loa
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import DashboardCard from '../components/os/DashboardCard';
+import logo from '../assets/logo_real.jpg';
 
 interface ActiveOS {
   id_os: number;
@@ -56,8 +57,8 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <LayoutDashboard className="h-8 w-8 text-brand-blue" />
-              <span className="ml-2 text-xl font-bold text-brand-gray uppercase tracking-tight">RealServiços</span>
+              <img src={logo} alt="RealServiços" className="h-10 w-auto" />
+              <span className="ml-2 text-xl font-bold text-brand-gray uppercase tracking-tight">Real Serviços</span>
             </div>
 
             <div className="flex items-center space-x-4">
