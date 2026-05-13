@@ -87,6 +87,7 @@ export class ClienteController {
     }
   };
 
+
   public deleteCliente = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;

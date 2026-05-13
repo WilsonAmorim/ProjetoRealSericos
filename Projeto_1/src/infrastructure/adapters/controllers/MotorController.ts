@@ -83,6 +83,7 @@ export class MotorController {
         ...updateData
       } = req.body;
 
+
       // 2. Realizamos o update apenas com dados puros da tabela 'motores'
       const { data, error } = await supabase
         .from('motores')

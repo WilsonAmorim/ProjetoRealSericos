@@ -3,7 +3,7 @@ import { supabase } from '../../../config/supabase';
 import { AppError } from '../../../middlewares/errorHandler';
 
 export class OSItemsController {
-  
+
   // Listar itens de uma OS específica
   public getItemsByOS = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -26,13 +26,14 @@ export class OSItemsController {
     }
   };
 
+
   // Adicionar item (serviço ou peça)
   public addItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { 
-        id_os, id_tipo_servico, id_produto, 
-        descricao_componente, servico_realizado, 
-        quantidade, valor_unitario 
+      const {
+        id_os, id_tipo_servico, id_produto,
+        descricao_componente, servico_realizado,
+        quantidade, valor_unitario
       } = req.body;
 
       const { data, error } = await supabase

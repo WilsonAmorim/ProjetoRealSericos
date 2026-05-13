@@ -212,6 +212,7 @@ export class OSController {
     }
   };
 
+
   public getCauses = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { data, error } = await supabase

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-    ChevronLeft, Package, Plus, Trash2, 
+import {
+    ChevronLeft, Package, Plus, Trash2,
     ClipboardList, Wrench, Search, Loader2, Save
 } from 'lucide-react';
 import api from '../services/api';
@@ -17,6 +17,7 @@ interface OSItem {
     tipo_servico?: { descricao_tipo_servico: string };
     produtos?: { descricao_produto: string; unidade: string };
 }
+
 
 const OSServiceTracking: React.FC = () => {
     const { id } = useParams();
@@ -88,7 +89,7 @@ const OSServiceTracking: React.FC = () => {
             };
 
             await api.post('/api/os-itens', newItem);
-            
+
             // Recarrega itens
             const itemsRes = await api.get(`/api/os-itens/${id}`);
             setItems(itemsRes.data.data);
@@ -132,7 +133,7 @@ const OSServiceTracking: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-6xl mx-auto space-y-6">
-                
+
                 {/* Header */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center space-x-4">
@@ -158,7 +159,7 @@ const OSServiceTracking: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
+
                     {/* Add Item Form */}
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -166,11 +167,11 @@ const OSServiceTracking: React.FC = () => {
                                 <Plus className="h-5 w-5 mr-2 text-brand-blue" />
                                 Lançar Serviço/Peça
                             </h2>
-                            
+
                             <form onSubmit={handleAddItem} className="space-y-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Serviço</label>
-                                    <select 
+                                    <select
                                         required
                                         value={idTipoServico}
                                         onChange={(e) => setIdTipoServico(e.target.value)}
@@ -192,7 +193,7 @@ const OSServiceTracking: React.FC = () => {
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Search className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input 
+                                        <input
                                             type="text"
                                             value={searchTerm}
                                             onChange={(e) => handleSearchProduct(e.target.value)}
@@ -223,7 +224,7 @@ const OSServiceTracking: React.FC = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Descrição do Componente</label>
-                                    <input 
+                                    <input
                                         type="text"
                                         required
                                         value={descricaoComponente}
@@ -235,7 +236,7 @@ const OSServiceTracking: React.FC = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Serviço Realizado</label>
-                                    <textarea 
+                                    <textarea
                                         required
                                         rows={2}
                                         value={servicoRealizado}
@@ -248,7 +249,7 @@ const OSServiceTracking: React.FC = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Qtd</label>
-                                        <input 
+                                        <input
                                             type="number"
                                             required
                                             value={quantidade}
@@ -262,7 +263,7 @@ const OSServiceTracking: React.FC = () => {
                                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span className="text-gray-400 text-xs font-bold">R$</span>
                                             </div>
-                                            <input 
+                                            <input
                                                 type="number"
                                                 required
                                                 step="0.01"
@@ -274,7 +275,7 @@ const OSServiceTracking: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <button 
+                                <button
                                     type="submit"
                                     disabled={isSubmitting}
                                     className="w-full mt-4 flex items-center justify-center space-x-2 py-3 bg-brand-blue text-white rounded-lg font-bold hover:bg-brand-blue-dark transition-colors disabled:opacity-50"
@@ -302,7 +303,7 @@ const OSServiceTracking: React.FC = () => {
                                     {items.length} ITENS
                                 </span>
                             </div>
-                            
+
                             {items.length === 0 ? (
                                 <div className="p-12 text-center">
                                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-full mb-4">
@@ -347,7 +348,7 @@ const OSServiceTracking: React.FC = () => {
                                                         </p>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleRemoveItem(item.id_item_os)}
                                                             className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                                         >

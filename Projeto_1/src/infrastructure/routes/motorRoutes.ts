@@ -24,6 +24,7 @@ router.put('/:id',
   motorController.updateMotor
 );
 
+
 // DELETE /api/motores/:id - Deletar (Faltava esta rota!)
 router.delete('/:id',
   authenticateUser,

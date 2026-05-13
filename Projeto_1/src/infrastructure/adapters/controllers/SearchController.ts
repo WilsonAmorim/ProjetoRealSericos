@@ -9,10 +9,11 @@ export class SearchController {
     this.searchUseCase = new SearchUseCase(supabase);
   }
 
+
   public search = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { query } = req.query;
-      
+
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ status: 'error', message: 'Query parameter is required and must be a string' });
       }
