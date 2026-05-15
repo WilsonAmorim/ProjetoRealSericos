@@ -4,23 +4,40 @@ import { AppError } from '../../../middlewares/errorHandler';
 
 export class OSItemsController {
 
-  // Listar itens de uma OS específica
+  // Listar itens de uma OS específica (Serviços e Peças separados)
   public getItemsByOS = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id_os } = req.params;
 
-      const { data, error } = await supabase
-        .from('os_itens_servico')
+      // 1. Buscar Serviços
+      const { data: servicosData, error: sErr } = await supabase
+        .from('os_servicos')
         .select(`
           *,
-          tipo_servico (descricao_tipo_servico),
-          produtos (descricao_produto, unidade)
+          servico (descricao_servico)
         `)
         .eq('id_os', Number(id_os));
 
-      if (error) return next(new AppError(error.message, 500));
+      if (sErr) return next(new AppError(sErr.message, 500));
 
-      res.status(200).json({ status: 'success', data });
+      // 2. Buscar Peças
+      const { data: pecasData, error: pErr } = await supabase
+        .from('os_pecas')
+        .select(`
+          *,
+          pecas (descricao_pecas)
+        `)
+        .eq('id_os', Number(id_os));
+
+      if (pErr) return next(new AppError(pErr.message, 500));
+
+      res.status(200).json({ 
+        status: 'success', 
+        data: {
+          servicos: servicosData,
+          pecas: pecasData
+        }
+      });
     } catch (error) {
       next(error);
     }
@@ -31,22 +48,30 @@ export class OSItemsController {
   public addItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
-        id_os, id_tipo_servico, id_produto,
-        descricao_componente, servico_realizado,
-        quantidade, valor_unitario
+        id_os, id_servico, id_pecas,
+        preco, quantidade // Adicionando quantidade caso exista na tabela
       } = req.body;
 
+      let table = '';
+      let insertData: any = {
+        id_os: Number(id_os),
+        preco: Number(preco)
+      };
+
+      if (id_servico) {
+        table = 'os_servicos';
+        insertData.id_servico = Number(id_servico);
+      } else if (id_pecas) {
+        table = 'os_pecas';
+        insertData.id_pecas = Number(id_pecas);
+        // Note: Se a tabela os_pecas tiver 'quantidade', deve ser enviada
+      } else {
+        return next(new AppError('id_servico ou id_pecas deve ser informado', 400));
+      }
+
       const { data, error } = await supabase
-        .from('os_itens_servico')
-        .insert([{
-          id_os: Number(id_os),
-          id_tipo_servico: Number(id_tipo_servico),
-          id_produto: id_produto ? Number(id_produto) : null,
-          descricao_componente,
-          servico_realizado,
-          quantidade: Number(quantidade),
-          valor_unitario: Number(valor_unitario)
-        }])
+        .from(table)
+        .insert([insertData])
         .select()
         .single();
 
@@ -62,11 +87,17 @@ export class OSItemsController {
   public removeItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id_item } = req.params;
+      const { type } = req.query; // 'servico' ou 'peca'
+
+      if (!type) return next(new AppError('Tipo (servico/peca) não informado', 400));
+
+      const table = type === 'servico' ? 'os_servicos' : 'os_pecas';
+      const idColumn = type === 'servico' ? 'id_osservicos' : 'id_ospecas';
 
       const { error } = await supabase
-        .from('os_itens_servico')
+        .from(table)
         .delete()
-        .eq('id_item_os', Number(id_item));
+        .eq(idColumn, Number(id_item));
 
       if (error) return next(new AppError(error.message, 500));
 
@@ -76,13 +107,13 @@ export class OSItemsController {
     }
   };
 
-  // Listar Tipos de Serviço
+  // Listar Serviços (Dropdown)
   public getServiceTypes = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { data, error } = await supabase
-        .from('tipo_servico')
+        .from('servico')
         .select('*')
-        .order('id_tipo_servico', { ascending: true });
+        .order('id_servico', { ascending: true });
 
       if (error) return next(new AppError(error.message, 500));
 
@@ -92,18 +123,34 @@ export class OSItemsController {
     }
   };
 
-  // Buscar produtos/peças
-  public searchProducts = async (req: Request, res: Response, next: NextFunction) => {
+  // Buscar peças
+  public searchPecas = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { term } = req.query;
 
       if (!term) return res.status(200).json({ status: 'success', data: [] });
 
       const { data, error } = await supabase
-        .from('produtos')
+        .from('pecas')
         .select('*')
-        .ilike('descricao_produto', `%${term}%`)
+        .ilike('descricao_pecas', `%${term}%`)
         .limit(10);
+
+      if (error) return next(new AppError(error.message, 500));
+
+      res.status(200).json({ status: 'success', data });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Listar todas as peças para o comboBox
+  public getAllPecas = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { data, error } = await supabase
+        .from('pecas')
+        .select('*')
+        .order('descricao_pecas', { ascending: true });
 
       if (error) return next(new AppError(error.message, 500));
 

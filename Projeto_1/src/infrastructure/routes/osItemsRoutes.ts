@@ -11,8 +11,11 @@ router.use(authenticateUser);
 // Listar tipos de serviço (dropdown)
 router.get('/tipos-servico', controller.getServiceTypes);
 
-// Buscar produtos (peças)
-router.get('/produtos/busca', controller.searchProducts);
+// Buscar peças
+router.get('/pecas/busca', controller.searchPecas);
+
+// Listar todas as peças (ComboBox)
+router.get('/pecas', controller.getAllPecas);
 
 // Listar itens de uma OS
 router.get('/:id_os', controller.getItemsByOS);
@@ -21,7 +24,7 @@ router.get('/:id_os', controller.getItemsByOS);
 router.post('/', controller.addItem);
 
 
-// Remover item da OS
+// Remover item da OS (usar query param ?type=servico ou ?type=peca)
 router.delete('/:id_item', controller.removeItem);
 
 export default router;
