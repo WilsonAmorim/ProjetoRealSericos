@@ -67,7 +67,7 @@ const OSOrcamento: React.FC = () => {
     const cliente = osData?.cliente;
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col lg:flex-row">
+        <div className="min-h-screen bg-gray-100 flex flex-col lg:flex-row main-layout-container">
             {/* ESTILO DE IMPRESSÃO CUSTOMIZADO E EMBUTIDO */}
             <style dangerouslySetInnerHTML={{
                 __html: `
@@ -85,34 +85,65 @@ const OSOrcamento: React.FC = () => {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
-                    /* Margens da página e tamanho A4 */
+                    /* Margens de página zeradas no papel para garantir que o navegador OMITA a URL, data e título */
                     @page {
                         size: A4;
-                        margin: 15mm 20mm 15mm 20mm;
+                        margin: 0 !important;
+                    }
+                    /* Resetar display flex e min-height no container principal na impressão para evitar quebra de página inicial em branco */
+                    .main-layout-container {
+                        display: block !important;
+                        min-height: 0 !important;
+                        height: auto !important;
+                        background: white !important;
                     }
                     .print-container {
+                        display: block !important;
                         background: white !important;
                         background-color: white !important;
                         padding: 0 !important;
                         margin: 0 !important;
                         width: 100% !important;
                         max-width: 100% !important;
+                        height: auto !important;
+                        min-height: 0 !important;
                     }
                     .print-sheet {
+                        display: block !important;
                         width: 100% !important;
                         max-width: 100% !important;
                         box-shadow: none !important;
                         border: none !important;
                         margin: 0 !important;
-                        padding: 0 !important;
+                        min-height: auto !important;
+                        /* Configurar as margens horizontais físicas diretamente como padding lateral do papel impresso */
+                        padding-left: 20mm !important;
+                        padding-right: 20mm !important;
+                        padding-top: 0 !important;
+                        padding-bottom: 0 !important;
                         background: white !important;
                     }
-                    /* Evitar quebras de página desagradáveis no meio de tabelas e listas */
-                    tr {
+                    /* Configurações para garantir que o cabeçalho timbrado repita perfeitamente sem cortes */
+                    thead {
+                        display: table-header-group !important;
+                    }
+                    thead tr {
                         page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                    }
+                    /* Permitir que a linha da tabela externa que envolve a proposta quebre naturalmente entre as páginas */
+                    .print-sheet > table > tbody > tr {
+                        page-break-inside: auto !important;
+                        break-inside: auto !important;
+                    }
+                    /* Evitar quebras de página no meio de linhas de tabelas internas de listagem de itens */
+                    .print-sheet tbody table tr {
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
                     }
                     h2, h3 {
                         page-break-after: avoid !important;
+                        break-after: avoid !important;
                     }
                 }
             `}} />
@@ -201,13 +232,32 @@ const OSOrcamento: React.FC = () => {
             <div className="flex-1 p-4 md:p-8 overflow-y-auto flex justify-center bg-gray-100 print-container">
                 <div className="print-sheet w-[210mm] min-h-[297mm] bg-white p-12 flex flex-col justify-between">
 
-                    <div>
-                        {/* 1. Logomarca e Cabeçalho */}
-                        <div className="flex flex-col items-center border-b-2 border-gray-800 pb-6 mb-6">
-                            <img src={logoCompleto} alt="Real Serviços" className="h-16 w-auto object-contain mb-2" />
-                            <h2 className="text-sm font-black text-gray-800 tracking-widest uppercase">Real Serviços Eletromecânicos e Com Ltda</h2>
-                            <p className="text-[10px] text-gray-500">Manutenção Industrial - Rebobinamento de Motores</p>
-                        </div>
+                    <table className="w-full border-collapse">
+                        <thead>
+                            <tr>
+                                <td className="p-0 border-none">
+                                    {/* Espaçador que simula a margem superior física de 15mm em cada folha do PDF */}
+                                    <div className="hidden print:block h-[15mm] w-full" />
+                                    {/* 1. Logomarca e Cabeçalho */}
+                                    <div className="flex flex-col items-center border-b-2 border-gray-800 pb-6 mb-6">
+                                        <img src={logoCompleto} alt="Real Serviços" className="h-16 w-auto object-contain mb-2" />
+                                        <h2 className="text-sm font-black text-gray-800 tracking-widest uppercase">Real Serviços Eletromecânicos e Com Ltda</h2>
+                                        <p className="text-[10px] text-gray-500">Manutenção Industrial - Rebobinamento de Motores</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <td className="p-0 border-none">
+                                    {/* Espaçador que simula a margem inferior física de 15mm em cada folha do PDF */}
+                                    <div className="hidden print:block h-[15mm] w-full" />
+                                </td>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            <tr>
+                                <td className="p-0 border-none">
 
                         {/* Assunto e Destinatário */}
                         <div className="space-y-4 mb-6">
@@ -223,9 +273,18 @@ const OSOrcamento: React.FC = () => {
                             <p className="text-sm text-gray-800 leading-relaxed">
                                 Prezado(a) <strong className="font-bold">{cliente?.nome_razao_social || 'Cliente'}</strong>,
                             </p>
-                            <p className="text-xs text-gray-600 leading-relaxed">
-                                Conforme solicitado, apresentamos o orçamento referente aos serviços de manutenção/rebobinamento do motor elétrico informado.
-                            </p>
+                            
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 border border-gray-200 p-4 rounded-lg gap-4">
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                    Conforme solicitado, apresentamos o orçamento referente aos serviços de manutenção/rebobinamento do motor elétrico informado.
+                                </p>
+                                <div className="text-left sm:text-right shrink-0 bg-white border border-gray-200 px-4 py-2 rounded-md shadow-sm">
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Valor do Orçamento</span>
+                                    <span className="text-lg font-black text-brand-blue">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalOS)}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* 1. Identificação do Equipamento */}
@@ -413,10 +472,14 @@ const OSOrcamento: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
 
                     {/* Rodapé da Proposta */}
-                    <div className="space-y-4 border-t border-gray-200 pt-6">
+                    <div className="space-y-4 border-t border-gray-200 pt-6 mt-6">
                         <p className="text-[10px] text-gray-500 leading-relaxed text-center">
                             Para autorizar a execução dos serviços ou caso tenha qualquer dúvida técnica, basta responder a este e-mail /
                             <strong className="font-semibold text-gray-700">realserv@terra.com.br</strong> ou entrar em contato conosco pelo telefone
