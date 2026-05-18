@@ -162,10 +162,9 @@ export class OSController {
         .select(`
         *,
         motores (
-          num_serie,
-          especificacao,
+          *,
           cliente (
-            nome_razao_social
+            *
           )
         ),
         andamento_servico!ordens_servico_id_andamento_fkey (
@@ -179,16 +178,34 @@ export class OSController {
         return next(new AppError('Ordem de Serviço não encontrada', 404));
       }
 
+      // Consulta robusta e segura para obter a causa da queima
+      let causaTexto = 'Não identificada / Não informada';
+      if (data.id_causa_queima) {
+        try {
+          const { data: causaData } = await supabase
+            .from('causas_queima')
+            .select('descricao_causa')
+            .eq('id_causa_queima', Number(data.id_causa_queima))
+            .single();
+          if (causaData?.descricao_causa) {
+            causaTexto = causaData.descricao_causa;
+          }
+        } catch (e) {
+          console.error('Erro ao buscar causa da queima:', e);
+        }
+      }
+
       const formattedData = {
         ...data,
         status_texto: data.andamento_servico?.descricao_andamento || `Status ${data.id_andamento}`,
-        cliente: {
-          razao_social: data.motores?.cliente?.nome_razao_social || 'N/D'
-        },
-        motor: {
-          num_serie: data.motores?.num_serie,
-          especificacao: data.motores?.especificacao
-        }
+        causa_texto: causaTexto,
+        cliente: data.motores?.cliente ? {
+          ...data.motores.cliente,
+          razao_social: data.motores.cliente.nome_razao_social || 'N/D'
+        } : { razao_social: 'N/D' },
+        motor: data.motores ? {
+          ...data.motores
+        } : null
       };
 
       res.status(200).json({ status: 'success', data: formattedData });

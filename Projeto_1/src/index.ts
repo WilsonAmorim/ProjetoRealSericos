@@ -25,6 +25,7 @@ import osRoutes from './infrastructure/routes/osRoutes';
 import clienteRoutes from './infrastructure/routes/clienteRoutes';
 import motorRoutes from './infrastructure/routes/motorRoutes';
 import osItemsRoutes from './infrastructure/routes/osItemsRoutes';
+import rebobinamentoRoutes from './infrastructure/routes/rebobinamentoRoutes';
 
 // Routes
 app.get('/health', (req, res) => {
@@ -36,6 +37,7 @@ app.use('/api/os', osRoutes);
 app.use('/api/os-itens', osItemsRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/motores', motorRoutes);
+app.use('/api/rebobinamentos', rebobinamentoRoutes);
 
 // Global Error Handler (must be the last middleware)
 app.use(errorHandler);

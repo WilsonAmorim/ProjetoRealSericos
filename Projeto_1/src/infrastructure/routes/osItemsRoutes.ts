@@ -27,4 +27,7 @@ router.post('/', controller.addItem);
 // Remover item da OS (usar query param ?type=servico ou ?type=peca)
 router.delete('/:id_item', controller.removeItem);
 
+// Atualizar item da OS (usar query param ?type=servico ou ?type=peca)
+router.put('/:id_item', controller.updateItem);
+
 export default router;

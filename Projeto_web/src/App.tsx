@@ -10,6 +10,7 @@ import Motors from './pages/Motors';
 import CreateOSForm from './pages/CreateOSForm';
 import UpdateOSForm from './pages/UpdateOSForm';
 import OSServiceTracking from './pages/OSServiceTracking';
+import OSOrcamento from './pages/OSOrcamento';
 
 function App() {
   return (
@@ -77,6 +78,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <OSServiceTracking />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/os/:id/orcamento"
+            element={
+              <ProtectedRoute>
+                <OSOrcamento />
               </ProtectedRoute>
             }
           />

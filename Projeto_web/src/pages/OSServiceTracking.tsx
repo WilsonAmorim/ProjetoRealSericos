@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     ChevronLeft, Package, Plus, Trash2,
     ClipboardList, Wrench, Loader2, Save,
-    Settings, Box
+    Settings, Box, Edit3, Check, X, FileText
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -23,6 +23,14 @@ interface OSPeca {
     pecas?: { descricao_pecas: string };
 }
 
+interface OSRebobinamento {
+    id_osrebobinamento: number;
+    id_os: number;
+    preco: number;
+    id_rebobinamento: number;
+    rebobinamentos?: { descricao_rebobinamento: string };
+}
+
 const OSServiceTracking: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -33,33 +41,39 @@ const OSServiceTracking: React.FC = () => {
     
     const [osServicos, setOsServicos] = useState<OSServico[]>([]);
     const [osPecas, setOsPecas] = useState<OSPeca[]>([]);
+    const [osRebobinamentos, setOsRebobinamentos] = useState<OSRebobinamento[]>([]);
     
     const [serviceTypes, setServiceTypes] = useState<any[]>([]);
     const [pecasList, setPecasList] = useState<any[]>([]);
+    const [rebobinamentoList, setRebobinamentoList] = useState<any[]>([]);
 
     // Tabs
-    const [activeTab, setActiveTab] = useState<'servicos' | 'pecas'>('servicos');
+    const [activeTab, setActiveTab] = useState<'servicos' | 'pecas' | 'rebobinamento'>('servicos');
 
     // Form states
     const [idServico, setIdServico] = useState('');
     const [idPecas, setIdPecas] = useState('');
+    const [idRebobinamento, setIdRebobinamento] = useState('');
     const [valorUnitario, setValorUnitario] = useState('0');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [osRes, itemsRes, typesRes, pecasRes] = await Promise.all([
+                const [osRes, itemsRes, typesRes, pecasRes, rebobinamentosRes] = await Promise.all([
                     api.get(`/api/os/${id}`),
                     api.get(`/api/os-itens/${id}`),
                     api.get('/api/os-itens/tipos-servico'),
-                    api.get('/api/os-itens/pecas')
+                    api.get('/api/os-itens/pecas'),
+                    api.get('/api/rebobinamentos')
                 ]);
 
                 setOsData(osRes.data.data);
                 setOsServicos(itemsRes.data.data.servicos);
                 setOsPecas(itemsRes.data.data.pecas);
+                setOsRebobinamentos(itemsRes.data.data.rebobinamentos || []);
                 setServiceTypes(typesRes.data.data);
                 setPecasList(pecasRes.data.data);
+                setRebobinamentoList(rebobinamentosRes.data.data || []);
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
             } finally {
@@ -69,6 +83,20 @@ const OSServiceTracking: React.FC = () => {
         fetchData();
     }, [id]);
 
+    const handleRebobinamentoChange = (value: string) => {
+        setIdRebobinamento(value);
+        if (value) {
+            const selected = rebobinamentoList.find(r => r.id_rebobinamento === Number(value));
+            if (selected && selected.preco !== null && selected.preco !== undefined) {
+                setValorUnitario(selected.preco.toString());
+            } else {
+                setValorUnitario('0');
+            }
+        } else {
+            setValorUnitario('0');
+        }
+    };
+
     const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -77,6 +105,7 @@ const OSServiceTracking: React.FC = () => {
                 id_os: id,
                 id_servico: activeTab === 'servicos' ? Number(idServico) : null,
                 id_pecas: activeTab === 'pecas' ? Number(idPecas) : null,
+                id_rebobinamento: activeTab === 'rebobinamento' ? Number(idRebobinamento) : null,
                 preco: Number(valorUnitario)
             };
 
@@ -86,10 +115,12 @@ const OSServiceTracking: React.FC = () => {
             const itemsRes = await api.get(`/api/os-itens/${id}`);
             setOsServicos(itemsRes.data.data.servicos);
             setOsPecas(itemsRes.data.data.pecas);
+            setOsRebobinamentos(itemsRes.data.data.rebobinamentos || []);
 
             // Limpa form
             setIdServico('');
             setIdPecas('');
+            setIdRebobinamento('');
             setValorUnitario('0');
         } catch (error) {
             console.error('Erro ao adicionar item:', error);
@@ -99,24 +130,46 @@ const OSServiceTracking: React.FC = () => {
         }
     };
 
-    const handleRemoveItem = async (idItem: number, type: 'servico' | 'peca') => {
+    const handleRemoveItem = async (idItem: number, type: 'servico' | 'peca' | 'rebobinamento') => {
         if (!confirm('Deseja remover este item?')) return;
         try {
             await api.delete(`/api/os-itens/${idItem}?type=${type}`);
             
             if (type === 'servico') {
                 setOsServicos(osServicos.filter(i => i.id_osservicos !== idItem));
-            } else {
+            } else if (type === 'peca') {
                 setOsPecas(osPecas.filter(i => i.id_ospecas !== idItem));
+            } else if (type === 'rebobinamento') {
+                setOsRebobinamentos(osRebobinamentos.filter(i => i.id_osrebobinamento !== idItem));
             }
         } catch (error) {
             console.error('Erro ao remover item:', error);
         }
     };
 
+    const handleUpdatePrice = async (idItem: number, newPrice: number, type: 'servico' | 'peca' | 'rebobinamento') => {
+        try {
+            await api.put(`/api/os-itens/${idItem}?type=${type}`, { preco: newPrice });
+            
+            if (type === 'servico') {
+                setOsServicos(osServicos.map(i => i.id_osservicos === idItem ? { ...i, preco: newPrice } : i));
+            } else if (type === 'peca') {
+                setOsPecas(osPecas.map(i => i.id_ospecas === idItem ? { ...i, preco: newPrice } : i));
+            } else if (type === 'rebobinamento') {
+                setOsRebobinamentos(osRebobinamentos.map(i => i.id_osrebobinamento === idItem ? { ...i, preco: newPrice } : i));
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar preço:', error);
+            alert('Erro ao atualizar preço.');
+            throw error;
+        }
+    };
+
+
     const totalServicos = osServicos.reduce((acc, item) => acc + Number(item.preco), 0);
     const totalPecas = osPecas.reduce((acc, item) => acc + Number(item.preco), 0);
-    const totalOS = totalServicos + totalPecas;
+    const totalRebobinamento = osRebobinamentos.reduce((acc, item) => acc + Number(item.preco), 0);
+    const totalOS = totalServicos + totalPecas + totalRebobinamento;
 
     if (loading) {
         return (
@@ -146,11 +199,21 @@ const OSServiceTracking: React.FC = () => {
                             </p>
                         </div>
                     </div>
-                    <div className="bg-brand-blue/5 border border-brand-blue/10 px-4 py-2 rounded-lg text-right">
-                        <p className="text-[10px] font-bold text-brand-blue uppercase tracking-wider">Total da Manutenção</p>
-                        <p className="text-2xl font-black text-brand-blue">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalOS)}
-                        </p>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                        <button
+                            onClick={() => navigate(`/os/${id}/orcamento`)}
+                            className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-md shadow-emerald-600/15 active:scale-95 transition-all"
+                        >
+                            <FileText className="h-4 w-4" />
+                            <span>Gerar Orçamento</span>
+                        </button>
+                        
+                        <div className="bg-brand-blue/5 border border-brand-blue/10 px-4 py-2 rounded-lg text-right">
+                            <p className="text-[10px] font-bold text-brand-blue uppercase tracking-wider">Total da Manutenção</p>
+                            <p className="text-2xl font-black text-brand-blue">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalOS)}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -184,12 +247,23 @@ const OSServiceTracking: React.FC = () => {
                                     <Box className="h-4 w-4 mr-2" />
                                     Peças
                                 </button>
+                                <button
+                                    onClick={() => setActiveTab('rebobinamento')}
+                                    className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors ${
+                                        activeTab === 'rebobinamento'
+                                            ? 'text-brand-blue border-b-2 border-brand-blue bg-white'
+                                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                                    }`}
+                                >
+                                    <Wrench className="h-4 w-4 mr-2" />
+                                    Rebobinamento
+                                </button>
                             </div>
 
                             <div className="p-6">
                                 <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                                     <Plus className="h-5 w-5 mr-2 text-brand-blue" />
-                                    {activeTab === 'servicos' ? 'Lançar Serviço' : 'Lançar Peça'}
+                                    {activeTab === 'servicos' ? 'Lançar Serviço' : activeTab === 'pecas' ? 'Lançar Peça' : 'Lançar Rebobinamento'}
                                 </h2>
 
                                 <form onSubmit={handleAddItem} className="space-y-4">
@@ -228,6 +302,25 @@ const OSServiceTracking: React.FC = () => {
                                         </div>
                                     )}
 
+                                    {activeTab === 'rebobinamento' && (
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rebobinamento</label>
+                                            <select
+                                                required
+                                                value={idRebobinamento}
+                                                onChange={(e) => handleRebobinamentoChange(e.target.value)}
+                                                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+                                            >
+                                                <option value="">Selecione um rebobinamento...</option>
+                                                {rebobinamentoList.map(r => (
+                                                    <option key={r.id_rebobinamento} value={r.id_rebobinamento}>
+                                                        {r.descricao_rebobinamento} {r.cv ? `(${r.cv} CV)` : ''} {r.polos ? `- ${r.polos} Polos` : ''} - R$ {Number(r.preco).toFixed(2)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Valor / Preço</label>
                                         <div className="relative">
@@ -254,7 +347,7 @@ const OSServiceTracking: React.FC = () => {
                                         {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                                             <>
                                                 <Save className="h-5 w-5" />
-                                                <span>{activeTab === 'servicos' ? 'Lançar Serviço' : 'Lançar Peça'}</span>
+                                                <span>{activeTab === 'servicos' ? 'Lançar Serviço' : activeTab === 'pecas' ? 'Lançar Peça' : 'Lançar Rebobinamento'}</span>
                                             </>
                                         )}
                                     </button>
@@ -269,14 +362,16 @@ const OSServiceTracking: React.FC = () => {
                             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-gray-800 flex items-center">
                                     <ClipboardList className="h-5 w-5 mr-2 text-brand-blue" />
-                                    {activeTab === 'servicos' ? 'Resumo de Serviços' : 'Resumo de Peças'}
+                                    {activeTab === 'servicos' ? 'Resumo de Serviços' : activeTab === 'pecas' ? 'Resumo de Peças' : 'Resumo de Rebobinamentos'}
                                 </h2>
                                 <div className="flex flex-col items-end">
                                     <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-widest">
-                                        {activeTab === 'servicos' ? osServicos.length : osPecas.length} ITENS
+                                        {activeTab === 'servicos' ? osServicos.length : activeTab === 'pecas' ? osPecas.length : osRebobinamentos.length} ITENS
                                     </span>
                                     <span className="text-xs font-bold text-brand-blue mt-1">
-                                        Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(activeTab === 'servicos' ? totalServicos : totalPecas)}
+                                        Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                            activeTab === 'servicos' ? totalServicos : activeTab === 'pecas' ? totalPecas : totalRebobinamento
+                                        )}
                                     </span>
                                 </div>
                             </div>
@@ -289,9 +384,10 @@ const OSServiceTracking: React.FC = () => {
                                         items={osServicos} 
                                         type="servico" 
                                         onRemove={(id) => handleRemoveItem(id, 'servico')} 
+                                        onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'servico')}
                                     />
                                 )
-                            ) : (
+                            ) : activeTab === 'pecas' ? (
                                 osPecas.length === 0 ? (
                                     <EmptyState message="Nenhuma peça lançada." />
                                 ) : (
@@ -299,6 +395,18 @@ const OSServiceTracking: React.FC = () => {
                                         items={osPecas} 
                                         type="peca" 
                                         onRemove={(id) => handleRemoveItem(id, 'peca')} 
+                                        onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'peca')}
+                                    />
+                                )
+                            ) : (
+                                osRebobinamentos.length === 0 ? (
+                                    <EmptyState message="Nenhum rebobinamento lançado." />
+                                ) : (
+                                    <ItemsTable 
+                                        items={osRebobinamentos} 
+                                        type="rebobinamento" 
+                                        onRemove={(id) => handleRemoveItem(id, 'rebobinamento')} 
+                                        onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'rebobinamento')}
                                     />
                                 )
                             )}
@@ -320,40 +428,151 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
     </div>
 );
 
-const ItemsTable: React.FC<{ items: any[], type: 'servico' | 'peca', onRemove: (id: number) => void }> = ({ items, type, onRemove }) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-left">
-            <thead>
-                <tr className="bg-gray-50/50">
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Descrição</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Preço</th>
-                    <th className="px-6 py-4 text-center"></th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-                {items.map((item) => (
-                    <tr key={type === 'servico' ? item.id_osservicos : item.id_ospecas} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-6 py-4">
-                            <p className="text-sm font-semibold text-gray-800">
-                                {type === 'servico' ? item.servico?.descricao_servico : item.pecas?.descricao_pecas}
-                            </p>
-                        </td>
-                        <td className="px-6 py-4 text-right text-sm font-bold text-gray-800">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco)}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                            <button
-                                onClick={() => onRemove(type === 'servico' ? item.id_osservicos : item.id_ospecas)}
-                                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </button>
-                        </td>
+const ItemsTable: React.FC<{
+    items: any[],
+    type: 'servico' | 'peca' | 'rebobinamento',
+    onRemove: (id: number) => void,
+    onUpdatePrice: (id: number, price: number) => Promise<void>
+}> = ({ items, type, onRemove, onUpdatePrice }) => {
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingValue, setEditingValue] = useState<string>('');
+    const [isSaving, setIsSaving] = useState<boolean>(false);
+
+    const startEdit = (item: any) => {
+        const id = type === 'servico' 
+            ? item.id_osservicos 
+            : type === 'peca' 
+                ? item.id_ospecas 
+                : item.id_osrebobinamento;
+        setEditingId(id);
+        setEditingValue(item.preco.toString());
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditingValue('');
+    };
+
+    const handleSave = async (id: number) => {
+        const value = parseFloat(editingValue);
+        if (isNaN(value) || value < 0) {
+            alert('Por favor, insira um valor válido.');
+            return;
+        }
+        setIsSaving(true);
+        try {
+            await onUpdatePrice(id, value);
+            setEditingId(null);
+        } catch (error) {
+            // Erro já tratado no pai
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-gray-50/50">
+                        <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Descrição</th>
+                        <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Preço</th>
+                        <th className="px-6 py-4 text-center"></th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
-);
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {items.map((item) => {
+                        const id = type === 'servico' 
+                            ? item.id_osservicos 
+                            : type === 'peca' 
+                                ? item.id_ospecas 
+                                : item.id_osrebobinamento;
+                        const isEditing = editingId === id;
+
+                        return (
+                            <tr key={id} className="hover:bg-gray-50/50 transition-colors group">
+                                <td className="px-6 py-4">
+                                    <p className="text-sm font-semibold text-gray-800">
+                                        {type === 'servico' 
+                                            ? item.servico?.descricao_servico 
+                                            : type === 'peca' 
+                                                ? item.pecas?.descricao_pecas 
+                                                : item.rebobinamentos?.descricao_rebobinamento}
+                                    </p>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    {isEditing ? (
+                                        <div className="flex items-center justify-end space-x-2">
+                                            <span className="text-gray-400 text-xs font-bold">R$</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={editingValue}
+                                                onChange={(e) => setEditingValue(e.target.value)}
+                                                disabled={isSaving}
+                                                className="w-24 p-1.5 bg-gray-50 border border-gray-200 rounded text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none text-right font-bold"
+                                                autoFocus
+                                            />
+                                        </div>
+                                    ) : (
+                                        <span className="text-sm font-bold text-gray-800">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco)}
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <div className="flex items-center justify-center space-x-2">
+                                        {isEditing ? (
+                                            <>
+                                                <button
+                                                    onClick={() => handleSave(id)}
+                                                    disabled={isSaving}
+                                                    className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-all"
+                                                    title="Salvar"
+                                                >
+                                                    {isSaving ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Check className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={cancelEdit}
+                                                    disabled={isSaving}
+                                                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all"
+                                                    title="Cancelar"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => startEdit(item)}
+                                                    className="p-2 text-gray-400 hover:text-brand-blue hover:bg-brand-blue/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Editar Preço"
+                                                >
+                                                    <Edit3 className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onRemove(id)}
+                                                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Remover Item"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
 export default OSServiceTracking;

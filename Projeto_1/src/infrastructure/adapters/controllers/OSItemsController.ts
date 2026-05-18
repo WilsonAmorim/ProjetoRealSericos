@@ -4,7 +4,7 @@ import { AppError } from '../../../middlewares/errorHandler';
 
 export class OSItemsController {
 
-  // Listar itens de uma OS específica (Serviços e Peças separados)
+  // Listar itens de uma OS específica (Serviços, Peças e Rebobinamentos separados)
   public getItemsByOS = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id_os } = req.params;
@@ -31,11 +31,23 @@ export class OSItemsController {
 
       if (pErr) return next(new AppError(pErr.message, 500));
 
+      // 3. Buscar Rebobinamento
+      const { data: rebobinamentosData, error: rErr } = await supabase
+        .from('os_rebobinamento')
+        .select(`
+          *,
+          rebobinamentos (descricao_rebobinamento)
+        `)
+        .eq('id_os', Number(id_os));
+
+      if (rErr) return next(new AppError(rErr.message, 500));
+
       res.status(200).json({ 
         status: 'success', 
         data: {
           servicos: servicosData,
-          pecas: pecasData
+          pecas: pecasData,
+          rebobinamentos: rebobinamentosData
         }
       });
     } catch (error) {
@@ -44,11 +56,11 @@ export class OSItemsController {
   };
 
 
-  // Adicionar item (serviço ou peça)
+  // Adicionar item (serviço, peça ou rebobinamento)
   public addItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
-        id_os, id_servico, id_pecas,
+        id_os, id_servico, id_pecas, id_rebobinamento,
         preco, quantidade // Adicionando quantidade caso exista na tabela
       } = req.body;
 
@@ -65,8 +77,11 @@ export class OSItemsController {
         table = 'os_pecas';
         insertData.id_pecas = Number(id_pecas);
         // Note: Se a tabela os_pecas tiver 'quantidade', deve ser enviada
+      } else if (id_rebobinamento) {
+        table = 'os_rebobinamento';
+        insertData.id_rebobinamento = Number(id_rebobinamento);
       } else {
-        return next(new AppError('id_servico ou id_pecas deve ser informado', 400));
+        return next(new AppError('id_servico, id_pecas ou id_rebobinamento deve ser informado', 400));
       }
 
       const { data, error } = await supabase
@@ -87,12 +102,25 @@ export class OSItemsController {
   public removeItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id_item } = req.params;
-      const { type } = req.query; // 'servico' ou 'peca'
+      const { type } = req.query; // 'servico', 'peca' ou 'rebobinamento'
 
-      if (!type) return next(new AppError('Tipo (servico/peca) não informado', 400));
+      if (!type) return next(new AppError('Tipo (servico/peca/rebobinamento) não informado', 400));
 
-      const table = type === 'servico' ? 'os_servicos' : 'os_pecas';
-      const idColumn = type === 'servico' ? 'id_osservicos' : 'id_ospecas';
+      let table = '';
+      let idColumn = '';
+
+      if (type === 'servico') {
+        table = 'os_servicos';
+        idColumn = 'id_osservicos';
+      } else if (type === 'peca') {
+        table = 'os_pecas';
+        idColumn = 'id_ospecas';
+      } else if (type === 'rebobinamento') {
+        table = 'os_rebobinamento';
+        idColumn = 'id_osrebobinamento';
+      } else {
+        return next(new AppError('Tipo inválido', 400));
+      }
 
       const { error } = await supabase
         .from(table)
@@ -159,4 +187,46 @@ export class OSItemsController {
       next(error);
     }
   };
+
+  // Atualizar item (preço)
+  public updateItem = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id_item } = req.params;
+      const { type } = req.query; // 'servico', 'peca' ou 'rebobinamento'
+      const { preco } = req.body;
+
+      if (!type) return next(new AppError('Tipo (servico/peca/rebobinamento) não informado', 400));
+      if (preco === undefined) return next(new AppError('Preço não informado', 400));
+
+      let table = '';
+      let idColumn = '';
+
+      if (type === 'servico') {
+        table = 'os_servicos';
+        idColumn = 'id_osservicos';
+      } else if (type === 'peca') {
+        table = 'os_pecas';
+        idColumn = 'id_ospecas';
+      } else if (type === 'rebobinamento') {
+        table = 'os_rebobinamento';
+        idColumn = 'id_osrebobinamento';
+      } else {
+        return next(new AppError('Tipo inválido', 400));
+      }
+
+      const { data, error } = await supabase
+        .from(table)
+        .update({ preco: Number(preco) })
+        .eq(idColumn, Number(id_item))
+        .select()
+        .single();
+
+      if (error) return next(new AppError(error.message, 500));
+
+      res.status(200).json({ status: 'success', data });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
+

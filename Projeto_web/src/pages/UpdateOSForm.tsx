@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { Save, ChevronLeft, ClipboardCheck, Loader2, AlertTriangle } from 'lucide-react';
+import { Save, ChevronLeft, ClipboardCheck, Loader2, AlertTriangle, FileText } from 'lucide-react';
 
 const UpdateOSForm: React.FC = () => {
     const { id } = useParams(); // ID da Ordem de Serviço
@@ -84,7 +84,7 @@ const UpdateOSForm: React.FC = () => {
             <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-gray-200 p-8">
 
                 {/* Cabeçalho */}
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-gray-100">
                     <div className="flex items-center space-x-3">
                         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <ChevronLeft className="h-6 w-6 text-gray-500" />
@@ -99,6 +99,14 @@ const UpdateOSForm: React.FC = () => {
                             </p>
                         </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/os/${id}/orcamento`)}
+                        className="flex items-center justify-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm active:scale-95 transition-all w-fit"
+                    >
+                        <FileText className="h-4 w-4" />
+                        <span>Ver Orçamento</span>
+                    </button>
                 </div>
 
                 <form onSubmit={handleUpdateOS} className="space-y-6">
