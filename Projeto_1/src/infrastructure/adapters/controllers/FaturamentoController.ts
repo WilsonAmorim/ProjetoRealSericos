@@ -88,7 +88,7 @@ export class FaturamentoController {
           .select('preco')
           .eq('id_os', id_os);
 
-        const totalServicos = (servicos || []).reduce((sum: number, s: any) => sum + (Number(s.preco) || 0), 0);
+        const totalServicos = (servicos || []).reduce((sum: number, s: any) => sum + (Number(s.preco) * 1.05 || 0), 0);
 
         // Peças
         const { data: pecas } = await db
@@ -96,7 +96,7 @@ export class FaturamentoController {
           .select('preco')
           .eq('id_os', id_os);
 
-        const totalPecas = (pecas || []).reduce((sum: number, p: any) => sum + (Number(p.preco) || 0), 0);
+        const totalPecas = (pecas || []).reduce((sum: number, p: any) => sum + (Number(p.preco) * 1.205 || 0), 0);
 
         // Rebobinamentos
         const { data: rebob } = await db
@@ -104,7 +104,7 @@ export class FaturamentoController {
           .select('preco')
           .eq('id_os', id_os);
 
-        const totalRebob = (rebob || []).reduce((sum: number, r: any) => sum + (Number(r.preco) || 0), 0);
+        const totalRebob = (rebob || []).reduce((sum: number, r: any) => sum + (Number(r.preco) * 1.05 || 0), 0);
 
         const totalOS = totalServicos + totalPecas + totalRebob;
         totalGeral += totalOS;
@@ -325,14 +325,14 @@ export class FaturamentoController {
           .from('os_servicos')
           .select('preco')
           .eq('id_os', idOs);
-        const totalServicos = (servicos || []).reduce((sum: number, s: any) => sum + (Number(s.preco) || 0), 0);
+        const totalServicos = (servicos || []).reduce((sum: number, s: any) => sum + (Number(s.preco) * 1.05 || 0), 0);
 
         // Peças
         const { data: pecas } = await db
           .from('os_pecas')
           .select('preco')
           .eq('id_os', idOs);
-        const totalPecas = (pecas || []).reduce((sum: number, p: any) => sum + (Number(p.preco) || 0), 0);
+        const totalPecas = (pecas || []).reduce((sum: number, p: any) => sum + (Number(p.preco) * 1.205 || 0), 0);
 
         relatorio.push({
           id_faturamento: f.id_faturamento,

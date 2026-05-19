@@ -43,9 +43,9 @@ const OSOrcamento: React.FC = () => {
         fetchData();
     }, [id, navigate]);
 
-    const totalServicos = osServicos.reduce((acc, item) => acc + Number(item.preco), 0);
-    const totalPecas = osPecas.reduce((acc, item) => acc + Number(item.preco), 0);
-    const totalRebobinamento = osRebobinamentos.reduce((acc, item) => acc + Number(item.preco), 0);
+    const totalServicos = osServicos.reduce((acc, item) => acc + (Number(item.preco) * 1.05), 0);
+    const totalPecas = osPecas.reduce((acc, item) => acc + (Number(item.preco) * 1.205), 0);
+    const totalRebobinamento = osRebobinamentos.reduce((acc, item) => acc + (Number(item.preco) * 1.05), 0);
     const totalOS = totalServicos + totalPecas + totalRebobinamento;
 
     const handlePrint = () => {
@@ -334,6 +334,7 @@ const OSOrcamento: React.FC = () => {
                                 <thead>
                                     <tr className="border-b border-gray-300 font-bold text-gray-700">
                                         <th className="py-2">Descrição</th>
+                                        <th className="py-2 text-right w-24">Imposto</th>
                                         <th className="py-2 text-right w-32">Valor</th>
                                     </tr>
                                 </thead>
@@ -353,16 +354,18 @@ const OSOrcamento: React.FC = () => {
                                                     <td className="py-2 font-medium">
                                                         {fullDesc}
                                                     </td>
+                                                    <td className="py-2 text-right text-gray-500 text-[10px]">
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco * 0.05)} (ISS 5%)
+                                                    </td>
                                                     <td className="py-2 text-right font-bold text-gray-800">
-                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco)}
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco * 1.05)}
                                                     </td>
                                                 </tr>
                                             );
                                         })
                                     ) : (
                                         <tr className="text-gray-400 italic">
-                                            <td className="py-2">Nenhum serviço de rebobinamento lançado para esta O.S.</td>
-                                            <td className="py-2 text-right font-bold">-</td>
+                                            <td className="py-2" colSpan={3}>Nenhum serviço de rebobinamento lançado para esta O.S.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -378,6 +381,7 @@ const OSOrcamento: React.FC = () => {
                                 <thead>
                                     <tr className="border-b border-gray-300 font-bold text-gray-700">
                                         <th className="py-2">Descrição</th>
+                                        <th className="py-2 text-right w-24">Imposto</th>
                                         <th className="py-2 text-right w-32">Valor</th>
                                     </tr>
                                 </thead>
@@ -392,16 +396,18 @@ const OSOrcamento: React.FC = () => {
                                                     <td className="py-2 font-medium">
                                                         {desc}
                                                     </td>
+                                                    <td className="py-2 text-right text-gray-500 text-[10px]">
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco * 0.05)} (ISS 5%)
+                                                    </td>
                                                     <td className="py-2 text-right font-bold text-gray-800">
-                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco)}
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco * 1.05)}
                                                     </td>
                                                 </tr>
                                             );
                                         })
                                     ) : (
                                         <tr className="text-gray-400 italic">
-                                            <td className="py-2">Nenhum serviço geral/adicional lançado para esta O.S.</td>
-                                            <td className="py-2 text-right font-bold">-</td>
+                                            <td className="py-2" colSpan={3}>Nenhum serviço geral/adicional lançado para esta O.S.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -417,6 +423,7 @@ const OSOrcamento: React.FC = () => {
                                 <thead>
                                     <tr className="border-b border-gray-300 font-bold text-gray-700">
                                         <th className="py-2">Descrição</th>
+                                        <th className="py-2 text-right w-24">Imposto</th>
                                         <th className="py-2 text-right w-32">Valor</th>
                                     </tr>
                                 </thead>
@@ -431,16 +438,18 @@ const OSOrcamento: React.FC = () => {
                                                     <td className="py-2 font-medium">
                                                         {desc}
                                                     </td>
+                                                    <td className="py-2 text-right text-gray-500 text-[10px]">
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco * 0.205)} (ICMS 20,5%)
+                                                    </td>
                                                     <td className="py-2 text-right font-bold text-gray-800">
-                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco)}
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.preco * 1.205)}
                                                     </td>
                                                 </tr>
                                             );
                                         })
                                     ) : (
                                         <tr className="text-gray-400 italic">
-                                            <td className="py-2">Nenhuma peça ou material substituído para esta O.S.</td>
-                                            <td className="py-2 text-right font-bold">-</td>
+                                            <td className="py-2" colSpan={3}>Nenhuma peça ou material substituído para esta O.S.</td>
                                         </tr>
                                     )}
                                 </tbody>

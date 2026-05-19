@@ -11,6 +11,7 @@ interface OSServico {
     id_osservicos: number;
     id_os: number;
     preco: number;
+    iss?: number;
     id_servico: number;
     servico?: { descricao_servico: string };
 }
@@ -19,6 +20,7 @@ interface OSPeca {
     id_ospecas: number;
     id_os: number;
     preco: number;
+    icms?: number;
     id_pecas: number;
     pecas?: { descricao_pecas: string };
 }
@@ -27,6 +29,7 @@ interface OSRebobinamento {
     id_osrebobinamento: number;
     id_os: number;
     preco: number;
+    iss?: number;
     id_rebobinamento: number;
     rebobinamentos?: { descricao_rebobinamento: string };
 }
@@ -166,9 +169,9 @@ const OSServiceTracking: React.FC = () => {
     };
 
 
-    const totalServicos = osServicos.reduce((acc, item) => acc + Number(item.preco), 0);
-    const totalPecas = osPecas.reduce((acc, item) => acc + Number(item.preco), 0);
-    const totalRebobinamento = osRebobinamentos.reduce((acc, item) => acc + Number(item.preco), 0);
+    const totalServicos = osServicos.reduce((acc, item) => acc + (Number(item.preco) * 1.05), 0);
+    const totalPecas = osPecas.reduce((acc, item) => acc + (Number(item.preco) * 1.205), 0);
+    const totalRebobinamento = osRebobinamentos.reduce((acc, item) => acc + (Number(item.preco) * 1.05), 0);
     const totalOS = totalServicos + totalPecas + totalRebobinamento;
 
     if (loading) {
@@ -476,6 +479,7 @@ const ItemsTable: React.FC<{
                 <thead>
                     <tr className="bg-gray-50/50">
                         <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Descrição</th>
+                        <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Imposto</th>
                         <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Preço</th>
                         <th className="px-6 py-4 text-center"></th>
                     </tr>
@@ -499,6 +503,14 @@ const ItemsTable: React.FC<{
                                                 ? item.pecas?.descricao_pecas 
                                                 : item.rebobinamentos?.descricao_rebobinamento}
                                     </p>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <span className="text-xs text-gray-500 font-medium">
+                                        {type === 'peca' 
+                                            ? `ICMS (20,5%): ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.icms || (item.preco * 0.205))}` 
+                                            : `ISS (5%): ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.iss || (item.preco * 0.05))}`
+                                        }
+                                    </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     {isEditing ? (
