@@ -194,14 +194,17 @@ const Dashboard: React.FC = () => {
           </Link>
 
           {/* Restrição de Acesso Admin baseada no id_perfil (Number) */}
-          {profile?.id_perfil === 1 && (
-            <Link to="/faturamento" className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">
+          {Number(profile?.id_perfil) === 1 && (
+            <button
+              onClick={() => navigate('/faturamento')}
+              className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-left w-full cursor-pointer"
+            >
               <div className="p-3 bg-emerald-50 rounded-lg w-fit mb-4 group-hover:bg-emerald-600 transition-colors">
                 <DollarSign className="h-6 w-6 text-emerald-600 group-hover:text-white" />
               </div>
               <h3 className="font-bold text-gray-900">Faturamento</h3>
               <p className="text-xs text-gray-500 mt-1">Fluxo de caixa e ordens concluídas</p>
-            </Link>
+            </button>
           )}
 
           <button

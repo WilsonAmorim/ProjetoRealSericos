@@ -29,9 +29,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   }
 
   // 3. Verificação de Role (Garantindo que ambos sejam tratados como números)
-  if (requiredRole && Number(profile.id_perfil) !== Number(requiredRole)) {
-    console.error("Acesso negado: Role insuficiente.");
-    return <Navigate to="/dashboard" replace />;
+  if (requiredRole !== undefined) {
+    const userRole = Number(profile.id_perfil);
+    const needed = Number(requiredRole);
+    console.log(`[ProtectedRoute] userRole=${userRole} (type: ${typeof profile.id_perfil}, raw: ${profile.id_perfil}), needed=${needed}`);
+    if (userRole !== needed) {
+      console.error("Acesso negado: Role insuficiente.");
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;
